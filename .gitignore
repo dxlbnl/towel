@@ -1,4 +1,11 @@
 *.py[co]
+*~
+*.swp
+.directory
+
+
+#docs 
+docs/.build/*
 
 # Packages
 *.egg

@@ -1,0 +1,6 @@
+<h1>Towel</h1>
+
+<p>A framework for building highly dynamic web applications. 
+The applications will be defined in python, and only python</p>
+
+<h1><a href="Templates">The template engine</a></h1>

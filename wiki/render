@@ -1,0 +1,24 @@
+#!/bin/bash
+
+dir=rendered
+files=$(find *.markdown)
+
+render () {
+	dest=$dir/${1%.*};
+	echo "Rendering file" $1 "To" $dest;
+	markdown $1 > $dest;
+}
+
+renderdir() {
+	echo "Found files:" $files
+	for file in $files 
+	do 
+	        render $file
+	done
+}
+
+while inotifywait -qe close_write . 
+do
+    renderdir
+done
+
