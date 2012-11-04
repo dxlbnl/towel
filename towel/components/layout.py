@@ -1,5 +1,5 @@
-from Templates import Widget, DOMNode
-from Style import SizePolicy
+from towel.templates import Widget, DOMNode
+from towel.style import SizePolicy
 
 
 class Layout(Widget):
@@ -21,13 +21,13 @@ class Layout(Widget):
         super(Layout, self).__init__()
         
         self.children = list(args)
-#        self.sizePolicy = SizePolicy(self, 
-#            x = SizePolicy.expanding, 
-#            y = SizePolicy.expanding
-#        )
+##        self.sizePolicy = SizePolicy(self, 
+##            x = SizePolicy.expanding, 
+##            y = SizePolicy.expanding
+##        )
         
     def setSize(self, x=None, y=None):
-        self.sizePolicy.setSize(x, y)
+        #self.sizePolicy.setSize(x, y)
         print 'setting size of layout:', x, y
         
     def addChild(self, child):

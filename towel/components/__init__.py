@@ -1,9 +1,9 @@
 
-from towel.Components.app import App
+from towel.components.app import App
  
-from towel.Components.lineEdit import LineEdit
-from towel.Components.menu import Menu
-from towel.Components.layout import HLayout, VLayout
-from towel.Components.listView import ListView
+from towel.components.lineEdit import LineEdit
+from towel.components.menu import Menu
+from towel.components.layout import HLayout, VLayout
+from towel.components.listView import ListView
 
-from towel.Components.layout import SizePolicy
+from towel.components.layout import SizePolicy

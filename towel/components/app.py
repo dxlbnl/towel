@@ -1,4 +1,4 @@
-from Templates import Widget, DOMNode
+from towel.templates import Widget, DOMNode
 
 class App(Widget):
         

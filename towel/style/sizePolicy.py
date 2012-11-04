@@ -1,4 +1,4 @@
-from Style import Sheet
+from towel.style import Sheet
 
 
 class SizePolicy(object):

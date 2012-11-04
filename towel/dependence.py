@@ -45,7 +45,6 @@ def load_module(name, origin='', asname=None, watch=None):
     else:
         location = name
         
-    #print "Loading module", name, "at", location.replace('.', '/')
     file, pathname, description = imp.find_module(location.replace('.', '/'), search_paths)
     
     if file:
@@ -145,11 +144,7 @@ class Package:
             mod, rest = name, None
         
         m = self.modules.get(mod, None)
-        print "________________"
-        print "mod", mod
-        print "m", m
-        print "rest", rest
-        print "name", name
+        
         if rest:
             return m.search(rest)
         else:

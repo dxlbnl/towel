@@ -1,5 +1,5 @@
 
-from Templates import DOMNode
+from towel.templates import DOMNode
 
 class Sheet(DOMNode):
     

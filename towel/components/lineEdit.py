@@ -1,5 +1,5 @@
-from Templates import Widget, DOMNode 
-from Communication import Signal
+from towel.templates import Widget, DOMNode 
+from towel.communication import Signal
 
 
 class LineEdit(Widget):

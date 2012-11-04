@@ -1,3 +1,3 @@
 
-from Style.sheet import Sheet 
-from Style.sizePolicy import SizePolicy 
+from towel.style.sheet import Sheet 
+from towel.style.sizePolicy import SizePolicy 
