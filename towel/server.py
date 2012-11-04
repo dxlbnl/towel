@@ -97,9 +97,16 @@ class ScriptServer(tornado.web.RequestHandler):
 class JSONHandler(tornado.web.RequestHandler):
     # applications can post a json request
     
-    def post(self):
+    servers = {}
+    
+    def post(self, server):
         print json.loads(self.request.body)
         self.write("test")
+        
+    @classmethod
+    def addJSONServer(name, server):
+        JSONHandler.servers[name] = server
+        
     
 settings = {
     "static_path"   : os.path.join(os.path.dirname(__file__), "static"),
@@ -116,6 +123,11 @@ application = tornado.web.Application([
 def add_application(application):
     print "adding application:", application
     ScriptServer.addApplication(application)
+    
+    
+def add_server(name, server):
+    print "adding application:", application
+    JSONHandler.addJSONServer(name, server)
     
 def start_server(port=8888, address='127.0.0.1'):
     application.listen(port, address)
