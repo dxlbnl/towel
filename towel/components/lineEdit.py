@@ -21,38 +21,36 @@ class LineEdit(Widget):
         self.textEntered = Signal()
         self.sortNow = Signal()
         
-        self.track(":keyup", self.__keypressed)
+        #self.track(":keyup", self.__keypressed)
         self.track(":keypress", self.__keypressed)
-        self.track(":keydown", self.__keypressed)
         
         self.default = default
         self.value = ''
         
     @JSVar('e')
     def __keypressed(self, e):
-        code = py(e.charCode)
+        
+        ev_type = py(e.type)
+        keyCode = py(e.which)
         value = py(e.target.value)
+        
         ctrl  = py(e.ctrlKey)
         alt  = py(e.altKey)
-        keyCode = py(e.which)
         
-        print "key pressed", value, keyCode
+        if ev_type == "keypress":
+            code = py(e.keyCode)
+            value += chr(code)
+            
+        if keyCode == 13:
+            self.textEntered(value)
+            self.value = value = ''
+            self.valueChanged('')
+            
+        if self.value != value and self.valueChanged.listening():
+            self.valueChanged(value)
         
-        if code == 13:
-            print 1
-            if self.textEntered.listening():
-                self.value = ""
-                self.textEntered(value)
-        else:
-            print 2
-            if self.value != value and self.valueChanged.listening():
-                self.valueChanged(value)
-                
-            if ctrl and keyCode == 2:
-                
-                self.sortNow()
-                
-            self.value = value
+        
+
 
     def clear(self):
         print 'clearing'
