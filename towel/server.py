@@ -3,6 +3,7 @@ import os.path
 
 import tornado.ioloop
 import tornado.web
+import tornado.websocket
 from tornado.autoreload import watch
 
 from dependence import makeDependencyTree
@@ -17,9 +18,15 @@ html_template = """
 <script src=/static/py-builtins.js></script>
 <script>
 
-var JsonHttpRequest = function () {{
+function JsonHttpRequest() {{
     return new XMLHttpRequest();
 }};
+
+function create_web_socket(url) {{
+    return new WebSocket("ws://" + url);;
+}}
+
+
 
 $PY.load_lazy = function (module) {{
     //console.log("Loading module", module);
@@ -100,13 +107,43 @@ class JSONHandler(tornado.web.RequestHandler):
     servers = {}
     
     def post(self, server):
-        print json.loads(self.request.body)
-        self.write("test")
+        data = json.loads(self.request.body)
+        print server, 
+        if server in self.servers:
+            res = self.servers[server](*data['args'], **data['kwargs'])
+            self.write(json.dumps(res))
+        
         
     @classmethod
-    def addJSONServer(name, server):
-        JSONHandler.servers[name] = server
+    def addJSONServer(cls, name, server):
+        cls.servers[name] = server
+  
+  
+class WSHandler(tornado.websocket.WebSocketHandler):
+    connections = []
+    def open(self):
+        self.connections.append(self)
+        print 'new connection'
+    
+    def on_message(self, message):
+        data = json.loads(message)
         
+        args = []
+        for a in data['args']:
+            args.append(a.upper())
+        #args = [a.upper() for a in data['args'] if isinstance(a, str)]
+        
+        resp = {'args' : args, 'kwargs' : data['kwargs']}
+        
+        
+        print 'message received:',  data, resp
+        
+        for conn in self.connections:
+            conn.write_message(json.dumps(resp))
+
+    def on_close(self):
+        self.connections.remove(self)
+        print 'connection closed'
     
 settings = {
     "static_path"   : os.path.join(os.path.dirname(__file__), "static"),
@@ -115,7 +152,8 @@ settings = {
         
 application = tornado.web.Application([
     (r"/import/([\w.]+)", ScriptServer),
-    (r"/ajax", JSONHandler),
+    (r"/ajax/([\w]+)", JSONHandler),
+    (r"/ws", WSHandler),
     (r"/(\w*)", MainHandler),
 ], **settings)
 
