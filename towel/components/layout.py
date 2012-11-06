@@ -1,5 +1,4 @@
 from towel.templates import Widget, DOMNode
-from towel.style import SizePolicy
 
 
 class Layout(Widget):

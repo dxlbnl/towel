@@ -6,4 +6,4 @@ from towel.components.menu import Menu
 from towel.components.layout import HLayout, VLayout
 from towel.components.listView import ListView
 
-from towel.components.layout import SizePolicy
+#from towel.components.layout import SizePolicy
