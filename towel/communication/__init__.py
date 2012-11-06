@@ -1,6 +1,7 @@
 
 
 from towel.communication.signal import Signal 
+from towel import configuration
 
 @JSVar('JSON')
 def json_dumps(obj):
@@ -65,7 +66,7 @@ class JsonSignal(Signal):
     def __init__(self, identifier):
         super(JsonSignal, self).__init__()
         
-        ws = create_web_socket("dev.towel.dxtr.be/ws")
+        ws = create_web_socket(configuration.host + "/ws")
         
         ws.onmessage = js(self.on_message)
         ws.onclose = js(self.on_close)

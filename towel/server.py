@@ -1,6 +1,8 @@
 import json
 import os.path
 
+from towel import configuration
+
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
@@ -186,6 +188,6 @@ def add_server(name, server):
     print "adding application:", application
     WSHandler.addHandler(name, server)
     
-def start_server(port=8888, address='127.0.0.1'):
+def start_server(port=configuration.port, address=configuration.localhost):
     application.listen(port, address)
     tornado.ioloop.IOLoop.instance().start()
