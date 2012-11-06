@@ -61,7 +61,7 @@ JsonSignal = ''
         
 class WebSocket(object):
     @JSVar("ws")
-    def __init__(self, url, ev_open, ev_close, ev_message):
+    def __init__(self, url):
         ws = js(create_web_socket(url))
         ws.onmessage = js(self.on_message)
         ws.onopen    = js(self.on_open)
@@ -71,10 +71,6 @@ class WebSocket(object):
         self.state = 'close'
         self.cache = []
 
-        self.ev_open = ev_open
-        self.ev_close = ev_close
-        self.ev_message = ev_message
-
     @JSVar("res")
     def on_message(self, res):
         data = py(json.loads(res.data))
@@ -82,7 +78,6 @@ class WebSocket(object):
         parent_cls = super(JsonSignal, instance)
         parent_cls.__call__(*data['args'], **data['kwargs']) 
 
-    @JSVar("ws")
     def on_open(self, func):
         print 'opened ws'
         self.state = 'open'
@@ -90,7 +85,6 @@ class WebSocket(object):
             for data in self.cache:
                 self.send(data)
 
-    @JSVar("ws")
     def on_close(self, func):
         print 'closed ws'
         self.state = 'close'
@@ -116,6 +110,7 @@ class JsonSignal(Signal):
             identifier = identifier
         )))
         
+  
         
     def __call__(self, *args, **kwargs):
         data = {
@@ -130,5 +125,5 @@ class JsonSignal(Signal):
         self.send(jsondata)
 
 
-ws = WebSocket("dev.towel.dxtr.be/ws", JsonSignal.on_open, JsonSignal.on_close, JsonSignal.on_message)
+ws = WebSocket("dev.towel.dxtr.be/ws")
 JsonSignal.send = ws.send
