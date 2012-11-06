@@ -65,7 +65,7 @@ class JsonSignal(Signal):
     def __init__(self, identifier):
         super(JsonSignal, self).__init__()
         
-        ws = create_web_socket("localhost:8888/ws")
+        ws = create_web_socket("dev.towel.dxtr.be/ws")
         
         ws.onmessage = js(self.on_message)
         ws.onclose = js(self.on_close)

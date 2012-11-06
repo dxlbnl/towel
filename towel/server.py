@@ -121,29 +121,48 @@ class JSONHandler(tornado.web.RequestHandler):
   
 class WSHandler(tornado.websocket.WebSocketHandler):
     connections = []
+    handlers = {}
+
     def open(self):
         self.connections.append(self)
+        self.signals = {}
         print 'new connection'
     
     def on_message(self, message):
         data = json.loads(message)
+        identifier = data['identifier']
+        type = data['type']
+        print 'message received:',  data
+
+        if type == 'create':
+            if identifier in self.handlers:
+                instance = self.handlers[identifier]
+                self.signals[identifier] = self.handlers[identifier](identifier, self)
+            else:
+                print "did not find identifier"
+                self.all(identifier, "no handler available")
+        else:
+
+            if identifier in self.handlers:
+                self.signals[identifier](*data['args'], **data['kwargs'])
+                self.all(identifier, 'ok')
+            else:
+                print "did not find identifier"
+                self.all(identifier, "no handler available")
         
-        args = []
-        for a in data['args']:
-            args.append(a.upper())
-        #args = [a.upper() for a in data['args'] if isinstance(a, str)]
         
-        resp = {'args' : args, 'kwargs' : data['kwargs']}
-        
-        
-        print 'message received:',  data, resp
-        
-        for conn in self.connections:
-            conn.write_message(json.dumps(resp))
 
     def on_close(self):
         self.connections.remove(self)
         print 'connection closed'
+    
+    def all(self, identifier, *args, **kwargs):
+        for conn in self.connections:
+            conn.write_message(json.dumps(dict(identifier=identifier, args=args, kwargs=kwargs)))
+        
+    @classmethod
+    def addHandler(cls, name, server):
+        cls.handlers[name] = server
     
 settings = {
     "static_path"   : os.path.join(os.path.dirname(__file__), "static"),
@@ -165,7 +184,7 @@ def add_application(application):
     
 def add_server(name, server):
     print "adding application:", application
-    JSONHandler.addJSONServer(name, server)
+    WSHandler.addHandler(name, server)
     
 def start_server(port=8888, address='127.0.0.1'):
     application.listen(port, address)
