@@ -57,47 +57,78 @@ json.loads = json_loads
     #ws.onopen = function(evt) {{ 
         #console.log("websocked: " + url + " opened");
     #}};
-    
+JsonSignal = ''    
         
+class WebSocket(object):
+    @JSVar("ws")
+    def __init__(self, url, ev_open, ev_close, ev_message):
+        ws = js(create_web_socket(url))
+        ws.onmessage = js(self.on_message)
+        ws.onopen    = js(self.on_open)
+        ws.onclose   = js(self.on_close)
+
+        self.ws = ws
+        self.state = 'close'
+        self.cache = []
+
+        self.ev_open = ev_open
+        self.ev_close = ev_close
+        self.ev_message = ev_message
+
+    @JSVar("res")
+    def on_message(self, res):
+        data = py(json.loads(res.data))
+        instance = JsonSignal.websignals[data['identifier']]
+        parent_cls = super(JsonSignal, instance)
+        parent_cls.__call__(*data['args'], **data['kwargs']) 
+
+    @JSVar("ws")
+    def on_open(self, func):
+        print 'opened ws'
+        self.state = 'open'
+        if self.cache:
+            for data in self.cache:
+                self.send(data)
+
+    @JSVar("ws")
+    def on_close(self, func):
+        print 'closed ws'
+        self.state = 'close'
+
+    @JSVar("ws")
+    def send(self, data):
+        if self.state == 'open':
+            ws = js(self.ws)
+            ws.send(data)
+        else:
+            self.cache.append(data)
         
 class JsonSignal(Signal):
-    @JSVar('ws')
+    websignals = {}
+    
     def __init__(self, identifier):
         super(JsonSignal, self).__init__()
         
-        ws = create_web_socket("dev.towel.dxtr.be/ws")
-        
-        ws.onmessage = js(self.on_message)
-        ws.onclose = js(self.on_close)
-        ws.onopen = js(self.on_open)
-        
-        self.ws = ws
         self.identifier = identifier
+        self.websignals[identifier] = self
+        self.send(json.dumps(dict(
+            type = 'create',
+            identifier = identifier
+        )))
         
-    @JSVar('res')
-    def on_message(self, res):
-        print "Received message:", res
-        data = py(json.loads(res.data))
-        super(JsonSignal, self).__call__(*data['args'], **data['kwargs'])
         
-    def on_open(self):
-        print "Websocket connection opened"
-        
-    @JSVar('window')
-    def on_close(self):
-        #window.location = window.location
-        print "Websocket connection closed"
-        
-    @JSVar('ws')
     def __call__(self, *args, **kwargs):
         data = {
             'identifier' : self.identifier,
+            'type'       : 'call',
             'args'       : args,
             'kwargs'     : kwargs
         }
         jsondata = json.dumps(data)
         
         print jsondata
-        
-        ws = js(self.ws)
-        ws.send(jsondata)
+        self.send(jsondata)
+
+
+ws = WebSocket("dev.towel.dxtr.be/ws", JsonSignal.on_open, JsonSignal.on_close, JsonSignal.on_message)
+JsonSignal.send = ws.send
