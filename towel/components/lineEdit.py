@@ -32,17 +32,17 @@ class LineEdit(Widget):
         
         ev_type = py(e.type)
         keyCode = py(e.which)
-        value = py(e.target.value)
+        value = py(e.target.value).strip()
         
         ctrl  = py(e.ctrlKey)
         alt  = py(e.altKey)
         
-        if ev_type == "keypress":
-            code = py(e.keyCode)
-            value += chr(code)
-            
         if keyCode == 13:
             self.textEntered(value)
+        elif ev_type == "keypress":
+            code = py(e.keyCode)
+            value += chr(code)
+
             
         if self.value != value and self.valueChanged.listening():
             self.valueChanged(value)

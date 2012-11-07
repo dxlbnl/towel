@@ -61,16 +61,21 @@ json.loads = json_loads
 JsonSignal = ''    
         
 class WebSocket(object):
-    @JSVar("ws")
     def __init__(self, url):
-        ws = js(create_web_socket(url))
+        self.url = url
+        self.cache = []
+
+        self.connect()
+
+    @JSVar("ws")
+    def connect(self):
+        ws = js(create_web_socket(self.url))
         ws.onmessage = js(self.on_message)
         ws.onopen    = js(self.on_open)
         ws.onclose   = js(self.on_close)
-
-        self.ws = ws
         self.state = 'close'
-        self.cache = []
+        self.ws = ws
+        
 
     @JSVar("res")
     def on_message(self, res):
@@ -89,6 +94,7 @@ class WebSocket(object):
     def on_close(self, func):
         print 'closed ws'
         self.state = 'close'
+        self.connect()
 
     @JSVar("ws")
     def send(self, data):

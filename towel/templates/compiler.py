@@ -106,7 +106,6 @@ class List(list):
         for target in self.targets:
             item = target['listItems'].pop(i)
             item.node.destroy()
-            del item
           
     def sort(self, cmp=None, key=None, reverse=False):
         # construct a list of tuples

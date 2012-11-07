@@ -16,6 +16,9 @@ html_template = """
 <!doctype html>
 <meta charset=utf-8>
 
+<link href='/static/style.css' rel='stylesheet'></link>
+<link href='/static/reset.css' rel='stylesheet'></link>
+
 <script src=/static/ajax.js></script>
 <script src=/static/py-builtins.js></script>
 <script>
@@ -121,7 +124,8 @@ class JSONHandler(tornado.web.RequestHandler):
         cls.servers[name] = server
   
   
-class WSHandler(tornado.websocket.WebSocketHandler):
+class Client(tornado.websocket.WebSocketHandler):
+    """The client object dispatches messages to connected functions and keeps state"""
     connections = []
     handlers = {}
 
@@ -131,6 +135,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         print 'new connection'
     
     def on_message(self, message):
+        """The dispatcher"""
         data = json.loads(message)
         identifier = data['identifier']
         type = data['type']
@@ -150,11 +155,11 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             else:
                 print "did not find identifier"
                 self.all(identifier, "no handler available")
-        
-        
 
     def on_close(self):
         self.connections.remove(self)
+        for signal in self.signals:
+            self.signals[signal].detach()
         print 'connection closed'
     
     def all(self, identifier, *args, **kwargs):
@@ -173,7 +178,7 @@ settings = {
 application = tornado.web.Application([
     (r"/import/([\w.]+)", ScriptServer),
     (r"/ajax/([\w]+)", JSONHandler),
-    (r"/ws", WSHandler),
+    (r"/ws", Client),
     (r"/(\w*)", MainHandler),
 ], **settings)
 
@@ -185,7 +190,7 @@ def add_application(application):
     
 def add_server(name, server):
     print "adding application:", application
-    WSHandler.addHandler(name, server)
+    Client.addHandler(name, server)
     
 def start_server(port=configuration.port, address=configuration.localhost):
     application.listen(port, address)

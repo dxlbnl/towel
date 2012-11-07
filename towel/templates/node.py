@@ -141,4 +141,3 @@ class DOMNode(object):
         
     def destroy(self):
         self.remove()
-        del self

@@ -1,5 +1,5 @@
 
-
+/*
 body { 
     margin: 0;
     padding: 0;
@@ -19,4 +19,22 @@ body {
 .VLayout > div {
     width: 100%;
     float: left;
+}
+*/
+
+div[class] {
+    position:absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+}
+
+div.HLayout > div:first-child {
+    position:absolute;
+    top:0;  bottom: 0;
+    left:0; right: 50%;
+}
+div.HLayout > div:nth-child(2) {
+    position:absolute;
+    top:0;  bottom: 0;
+    left:50%; right: 0;
 }

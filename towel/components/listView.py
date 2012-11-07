@@ -19,6 +19,12 @@ class ListView(View):
         
     def sort(self):
         self.items.sort()
+
+    def replace(self, items):
+        while self.items:
+            self.items.pop()
+        for i in items:
+            self.items.append(i)
     
     directive = {
         '@class' : 'name',
