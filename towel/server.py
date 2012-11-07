@@ -144,10 +144,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 print "did not find identifier"
                 self.all(identifier, "no handler available")
         else:
-
+            
             if identifier in self.handlers:
                 self.signals[identifier](*data['args'], **data['kwargs'])
-                self.all(identifier, 'ok')
             else:
                 print "did not find identifier"
                 self.all(identifier, "no handler available")

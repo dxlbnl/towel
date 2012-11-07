@@ -4,31 +4,44 @@ from towel.components import App, Menu, LineEdit, VLayout, HLayout, ListView
 from towel.communication import JsonSignal
 
 lineAdded = JsonSignal('lineAdded')
+nameChanged = JsonSignal('nameChanged')
 
 
+    
 class Chat(App):
     def __init__(self):
         super(Chat, self).__init__()
         
-        lv = ListView()
-        l = LineEdit('Type Here')
-        l1 = LineEdit("You can't here")
-        l1.disabled = True
+        messages = ListView()
+        chat_input = LineEdit('Type Here')
+        n_input = LineEdit("You can't here")
         
-        l.textEntered.connect(lineAdded)
-        lineAdded.connect(lv.addItem)
+        users = ListView()
+        user  = LineEdit("Name")
         
-        l.valueChanged.connect(l1.setValue)
+        n_input.disabled = True
+        
+        chat_input.textEntered.connect(lineAdded)
+        chat_input.textEntered.connect(chat_input.clear)
+        
+        lineAdded.connect(messages.addItem)
+        
+        chat_input.valueChanged.connect(n_input.setValue)
+        
+        user.textEntered.connect(nameChanged)
+        
+        def change_name(name):
+            messages.addItem("name changed to: " + py(name))
+
+        
+        nameChanged.connect(change_name)
         
         
-        l.sortNow.connect(lv.sort)
+        chat_layout = VLayout(messages, chat_input, n_input)
+        user_layout = VLayout(users, user)
         
-        layout1 = VLayout(lv, l, l1)
-        
-        l2 = LineEdit("Filter")
-        
-        self.layout = HLayout(layout1, l2)
-        self.layout.setSize(100, 100)
+        self.layout = HLayout(chat_layout, user_layout)
+        self.layout.setSize(200, 100)
         
         
 t = Chat()

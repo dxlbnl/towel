@@ -43,8 +43,6 @@ class LineEdit(Widget):
             
         if keyCode == 13:
             self.textEntered(value)
-            self.value = value = ''
-            self.valueChanged('')
             
         if self.value != value and self.valueChanged.listening():
             self.valueChanged(value)
@@ -53,7 +51,6 @@ class LineEdit(Widget):
 
 
     def clear(self):
-        print 'clearing'
         self.setValue('')
         
     def setValue(self, value):

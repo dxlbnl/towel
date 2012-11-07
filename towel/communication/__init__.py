@@ -1,6 +1,7 @@
 
 
 from towel.communication.signal import Signal 
+from towel import configuration
 
 @JSVar('JSON')
 def json_dumps(obj):
@@ -125,5 +126,5 @@ class JsonSignal(Signal):
         self.send(jsondata)
 
 
-ws = WebSocket("dev.towel.dxtr.be/ws")
+ws = WebSocket(configuration.host + "/ws")
 JsonSignal.send = ws.send
