@@ -122,8 +122,18 @@ class JSONHandler(tornado.web.RequestHandler):
     @classmethod
     def addJSONServer(cls, name, server):
         cls.servers[name] = server
-  
-  
+
+class ClientCaller(object):
+    def __init__(self, caller):
+        self.caller = caller
+    
+    def call(self, *args, **kwargs):
+        dict(identifier=identifier, args=args, kwargs=kwargs)
+    
+    def __getattr__(self, name):
+        
+        print "Getting attr", name
+        
 class Client(tornado.websocket.WebSocketHandler):
     """The client object dispatches messages to connected functions and keeps state"""
     connections = []
@@ -132,43 +142,50 @@ class Client(tornado.websocket.WebSocketHandler):
     def open(self):
         self.connections.append(self)
         self.signals = {}
+        
+        # caller helpers
+        self.all = ClientCaller(self.call_all)
+        
         print 'new connection'
+        
+    def call_all(self, data):
+        for conn in self.connections:
+            conn.write_message(json.dumps(data))
+        
     
     def on_message(self, message):
         """The dispatcher"""
         data = json.loads(message)
-        identifier = data['identifier']
+        print "Got message: ", data
+        
+        handler = data['handler']
         type = data['type']
-        print 'message received:',  data
 
         if type == 'create':
-            if identifier in self.handlers:
-                instance = self.handlers[identifier]
-                self.signals[identifier] = self.handlers[identifier](identifier, self)
+            if handler in self.handlers:
+                instance = self.handlers[handler]
+                self.signals[handler] = self.handlers[handler](self)
             else:
                 print "did not find identifier"
-                self.all(identifier, "no handler available")
-        else:
+                
+        #else:
             
-            if identifier in self.handlers:
-                self.signals[identifier](*data['args'], **data['kwargs'])
-            else:
-                print "did not find identifier"
-                self.all(identifier, "no handler available")
+            #if identifier in self.handlers:
+                #self.signals[identifier](*data['args'], **data['kwargs'])
+            #else:
+                #print "did not find identifier"
+                #self.all(identifier, "no handler available")
 
     def on_close(self):
         self.connections.remove(self)
-        for signal in self.signals:
-            self.signals[signal].detach()
+        #for signal in self.signals:
+            #self.signals[signal].detach()
         print 'connection closed'
     
-    def all(self, identifier, *args, **kwargs):
-        for conn in self.connections:
-            conn.write_message(json.dumps(dict(identifier=identifier, args=args, kwargs=kwargs)))
         
     @classmethod
-    def addHandler(cls, name, server):
-        cls.handlers[name] = server
+    def addHandler(cls, server):
+        cls.handlers[server.__name__] = server
     
 settings = {
     "static_path"   : os.path.join(os.path.dirname(__file__), "static"),
@@ -188,9 +205,9 @@ def add_application(application):
     ScriptServer.addApplication(application)
     
     
-def add_server(name, server):
+def add_server(server):
     print "adding application:", application
-    Client.addHandler(name, server)
+    Client.addHandler(server)
     
 def start_server(port=configuration.port, address=configuration.localhost):
     application.listen(port, address)

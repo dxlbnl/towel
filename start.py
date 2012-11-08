@@ -24,6 +24,26 @@ class Signal(object):
 class LineAdded(Signal):
     pass
 
+class Chat(object):
+    users = []
+    
+    def __init__(self, client):
+        self.client = client
+        self.name = "Guest"
+        
+    def on_message(self, msg):
+        # notify all other users.
+        self.client.all.on_message(msg)
+        
+    def name_changed(self, name):
+        if self.name:
+            self.users.remove(self.name)
+        
+        self.name = name
+        self.users.append(name)
+        self.users.sort()
+        
+        self.client.all.update_users(self.users)
     
 class NameChanged(Signal):
     names = []
@@ -44,11 +64,12 @@ class NameChanged(Signal):
         self.names.remove(self.name)
         self.all(self.names)
 
-
-
 server.add_application("test")
-server.add_server("lineAdded", LineAdded)
-server.add_server("nameChanged", NameChanged)
+
+server.add_server(Chat)
+
+#server.add_server("lineAdded", LineAdded)
+#server.add_server("nameChanged", NameChanged)
 #server.add_application("chat")
 #server.add_application("json_test")
 server.start_server();

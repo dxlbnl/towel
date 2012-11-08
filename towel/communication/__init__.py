@@ -94,7 +94,7 @@ class WebSocket(object):
     def on_close(self, func):
         print 'closed ws'
         self.state = 'close'
-        self.connect()
+        #self.connect()
 
     @JSVar("ws")
     def send(self, data):
@@ -104,24 +104,43 @@ class WebSocket(object):
         else:
             self.cache.append(data)
         
+
+def create_dummy_callable(send, handler, name):
+    def dummy_callable(*args, **kwargs):
+        send(json.dumps(dict(
+            type='call',
+            handler = handler,
+            name = name,
+            args = args, 
+            kwargs = kwargs
+        )))
+    
+        
 class JsonSignal(Signal):
     websignals = {}
     
-    def __init__(self, identifier):
+    def __init__(self, handler):
         super(JsonSignal, self).__init__()
         
-        self.identifier = identifier
-        self.websignals[identifier] = self
+        self.handler = handler
+        self.websignals[handler] = self
         self.send(json.dumps(dict(
             type = 'create',
-            identifier = identifier
+            handler = handler
         )))
         
-  
+        
+        
+    def __getattr__(self, name):
+        orig = super(JsonSignal, self).__getattr__(name)
+        print "Got orig:",orig, name
+        if orig != None:
+            return create_dummy_callable(self.send, self.handler, name)
+        return orig
         
     def __call__(self, *args, **kwargs):
         data = {
-            'identifier' : self.identifier,
+            'handler' : self.handler,
             'type'       : 'call',
             'args'       : args,
             'kwargs'     : kwargs

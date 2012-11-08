@@ -3,8 +3,8 @@ print 'opening test'
 from towel.components import App, Menu, LineEdit, VLayout, HLayout, ListView
 from towel.communication import JsonSignal
 
-lineAdded = JsonSignal('lineAdded')
-nameChanged = JsonSignal('nameChanged')
+ChatServer = JsonSignal('Chat')
+#nameChanged = JsonSignal('nameChanged')
 
 
     
@@ -26,14 +26,14 @@ class Chat(App):
         chat_input.textEntered.connect(self.on_input)
         chat_input.textEntered.connect(chat_input.clear)
         
-        lineAdded.connect(messages.addItem)
+        #lineAdded.connect(messages.addItem)
         
         chat_input.valueChanged.connect(n_input.setValue)
         
         user.valueChanged.connect(self.name_change)
         
         
-        nameChanged.connect(users.replace)
+        #nameChanged.connect(users.replace)
         
         
         chat_layout = VLayout(messages, chat_input, n_input)
@@ -47,13 +47,13 @@ class Chat(App):
 #            lineAdded("welcome: " + py(name))
 #        else:
 #            lineAdded(self.username + " changed name to: " + py(name))
-        nameChanged(name)
+        ChatServer.name_changed(name)
         self.username = name
 
     def on_input(self, line):
         line = py(line)
-        if line and self.username:
-            lineAdded(self.username + ": " + line)
+        #if line and self.username:
+            #lineAdded(self.username + ": " + line)
             
         
         
