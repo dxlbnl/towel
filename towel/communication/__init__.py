@@ -114,7 +114,7 @@ def create_dummy_callable(send, handler, name):
             args = args, 
             kwargs = kwargs
         )))
-    
+    return dummy_callable
         
 class JsonSignal(Signal):
     websignals = {}
@@ -129,14 +129,8 @@ class JsonSignal(Signal):
             handler = handler
         )))
         
-        
-        
     def __getattr__(self, name):
-        orig = super(JsonSignal, self).__getattr__(name)
-        print "Got orig:",orig, name
-        if orig != None:
-            return create_dummy_callable(self.send, self.handler, name)
-        return orig
+        return create_dummy_callable(self.send, self.handler, name)
         
     def __call__(self, *args, **kwargs):
         data = {

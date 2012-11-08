@@ -124,14 +124,31 @@ class JSONHandler(tornado.web.RequestHandler):
         cls.servers[name] = server
 
 class ClientCaller(object):
-    def __init__(self, caller):
-        self.caller = caller
+    def __init__(self, socket, identifier):
+        print "hier"
+        self.socket = socket
+        self.identifier = identifier
+        
+        # caller helpers
+        print 'hier'
+        self.all = self.create_lazy(self.socket.call_all)
+        
+    def create_lazy(self, callback):
+        print "creating lazy"
+        def create_call(self, name):
+            print "create call", name
+            def call(*args, **kwargs):
+                print "Call", args, kwargs
+            return call
+            
+        c = object()
+        c.__getattr__ = create_call
+        
     
     def call(self, *args, **kwargs):
         dict(identifier=identifier, args=args, kwargs=kwargs)
     
     def __getattr__(self, name):
-        
         print "Getting attr", name
         
 class Client(tornado.websocket.WebSocketHandler):
@@ -143,30 +160,40 @@ class Client(tornado.websocket.WebSocketHandler):
         self.connections.append(self)
         self.signals = {}
         
-        # caller helpers
-        self.all = ClientCaller(self.call_all)
-        
         print 'new connection'
         
     def call_all(self, data):
         for conn in self.connections:
             conn.write_message(json.dumps(data))
-        
     
     def on_message(self, message):
         """The dispatcher"""
-        data = json.loads(message)
-        print "Got message: ", data
-        
-        handler = data['handler']
-        type = data['type']
+        try:
+            data = json.loads(message)
+            print "Got data:", data
+            handler = data['handler']
+            type = data['type']
 
-        if type == 'create':
-            if handler in self.handlers:
-                instance = self.handlers[handler]
-                self.signals[handler] = self.handlers[handler](self)
-            else:
-                print "did not find identifier"
+            if type == 'create':
+                if handler in self.handlers:
+                    print handler, self.handlers[handler], ClientCaller
+                    #clientcaller = ClientCaller()
+                    print "hier2"
+                    self.signals[handler] = self.handlers[handler](clientcaller)
+                else:
+                    print "did not find identifier"
+            elif type == 'call':
+                name = data['name']
+                if handler in self.signals:
+                    f = getattr(self.signals[handler], name, None)
+                    if f:
+                        f(*data['args'], **data['kwargs'])
+                    else:
+                        print "did not find handler", handler, name
+                else:
+                    print "did not find handler", handler
+        except:
+            pass
                 
         #else:
             
