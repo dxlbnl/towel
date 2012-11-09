@@ -80,9 +80,9 @@ class WebSocket(object):
     @JSVar("res")
     def on_message(self, res):
         data = py(json.loads(res.data))
-        instance = JsonSignal.websignals[data['identifier']]
-        parent_cls = super(JsonSignal, instance)
-        parent_cls.__call__(*data['args'], **data['kwargs']) 
+        print "data", data
+        instance = JsonSignal.websignals[data['handler']]
+        instance.call(data['name'], *data['args'], **data['kwargs'])
 
     def on_open(self, func):
         print 'opened ws'
@@ -128,21 +128,17 @@ class JsonSignal(Signal):
             type = 'create',
             handler = handler
         )))
+    
+    def connect(self, obj):
+        """Connects the singal to an object"""
+        self.obj = obj
+        return obj
         
     def __getattr__(self, name):
         return create_dummy_callable(self.send, self.handler, name)
         
-    def __call__(self, *args, **kwargs):
-        data = {
-            'handler' : self.handler,
-            'type'       : 'call',
-            'args'       : args,
-            'kwargs'     : kwargs
-        }
-        jsondata = json.dumps(data)
-        
-        print jsondata
-        self.send(jsondata)
+    def call(self, name, *args, **kwargs):
+        self.obj.__getattribute__(name)(*args, **kwargs)
 
 
 ws = WebSocket(configuration.host + "/ws")

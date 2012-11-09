@@ -7,7 +7,14 @@ class Chat(object):
     
     def __init__(self, client):
         self.client = client
-        self.name = "Guest"
+        
+        for i in range(10):
+            n = "Guest-{}".format(i)
+            if n not in self.users:
+                self.name = n
+                break
+        
+        self.client.one.name_change(self.name)
         
         
     def on_message(self, msg):
@@ -16,12 +23,18 @@ class Chat(object):
         
     def name_changed(self, name):
         
+        if self.name in self.users:
+            self.users.remove(self.name)
+            
         self.name = name        
         self.users.append(name)
         self.users.sort()
         
         self.client.all.update_users(self.users)
     
+    def detach(self):
+        self.users.remove(self.name)
+        self.client.all.update_users(self.users)
 
 server.add_application("test")
 

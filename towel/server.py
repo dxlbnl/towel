@@ -123,33 +123,39 @@ class JSONHandler(tornado.web.RequestHandler):
     def addJSONServer(cls, name, server):
         cls.servers[name] = server
 
+        
+class LazyCaller(object):
+    """a lazycaller doesnt have any defined functions, instead it will package the function call"""
+    
+    def __init__(self, callback, handler):
+        self.callback = callback
+        self.handler = handler
+        
+        
+    def __getattr__(self, name):
+        def stub_function(*args, **kwargs):
+            self.callback(
+                dict(
+                    handler = self.handler,
+                    name    = name,
+                    args    = args,
+                    kwargs  = kwargs
+                )
+            )
+            
+        return stub_function
+        
+
 class ClientCaller(object):
-    def __init__(self, socket, identifier):
+    def __init__(self, socket, handler):
         print "hier"
         self.socket = socket
-        self.identifier = identifier
+        self.handler = handler
         
         # caller helpers
-        print 'hier'
-        self.all = self.create_lazy(self.socket.call_all)
+        self.all = LazyCaller(self.socket.call_all, self.handler)
+        self.one = LazyCaller(self.socket.call_one, self.handler)
         
-    def create_lazy(self, callback):
-        print "creating lazy"
-        def create_call(self, name):
-            print "create call", name
-            def call(*args, **kwargs):
-                print "Call", args, kwargs
-            return call
-            
-        c = object()
-        c.__getattr__ = create_call
-        
-    
-    def call(self, *args, **kwargs):
-        dict(identifier=identifier, args=args, kwargs=kwargs)
-    
-    def __getattr__(self, name):
-        print "Getting attr", name
         
 class Client(tornado.websocket.WebSocketHandler):
     """The client object dispatches messages to connected functions and keeps state"""
@@ -165,6 +171,9 @@ class Client(tornado.websocket.WebSocketHandler):
     def call_all(self, data):
         for conn in self.connections:
             conn.write_message(json.dumps(data))
+            
+    def call_one(self, data):
+        self.write_message(json.dumps(data))
     
     def on_message(self, message):
         """The dispatcher"""
@@ -176,10 +185,9 @@ class Client(tornado.websocket.WebSocketHandler):
 
             if type == 'create':
                 if handler in self.handlers:
-                    print handler, self.handlers[handler], ClientCaller
-                    #clientcaller = ClientCaller()
-                    print "hier2"
-                    self.signals[handler] = self.handlers[handler](clientcaller)
+                    clientcaller = ClientCaller(self, handler)
+                    instance =self.handlers[handler](clientcaller)
+                    self.signals[handler] = instance
                 else:
                     print "did not find identifier"
             elif type == 'call':
@@ -205,8 +213,8 @@ class Client(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         self.connections.remove(self)
-        #for signal in self.signals:
-            #self.signals[signal].detach()
+        for handler in self.handlers:
+            self.handlers[handler].detach()
         print 'connection closed'
     
         
