@@ -88,8 +88,6 @@ class ScriptServer(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/javascript")
         
         if lang == "javascript":
-            
-            print 'hier', mod
             if mod:        
                 self.write(mod.compile())
         else:
@@ -213,8 +211,10 @@ class Client(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         self.connections.remove(self)
-        for handler in self.handlers:
-            self.handlers[handler].detach()
+        for signal in self.signals:
+            instance = self.signals[signal]
+            print 'detaching', instance
+            instance.detach()
         print 'connection closed'
     
         
