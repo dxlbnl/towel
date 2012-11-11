@@ -88,8 +88,6 @@ class ScriptServer(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/javascript")
         
         if lang == "javascript":
-            
-            print 'hier', mod
             if mod:        
                 self.write(mod.compile())
         else:
@@ -113,7 +111,6 @@ class JSONHandler(tornado.web.RequestHandler):
     
     def post(self, server):
         data = json.loads(self.request.body)
-        print server, 
         if server in self.servers:
             res = self.servers[server](*data['args'], **data['kwargs'])
             self.write(json.dumps(res))
@@ -127,19 +124,20 @@ class JSONHandler(tornado.web.RequestHandler):
 class LazyCaller(object):
     """a lazycaller doesnt have any defined functions, instead it will package the function call"""
     
-    def __init__(self, callback, handler):
+    def __init__(self, callback, uuid):
         self.callback = callback
-        self.handler = handler
+        self.uuid = uuid
         
         
     def __getattr__(self, name):
         def stub_function(*args, **kwargs):
+            print "<--", args, kwargs
             self.callback(
                 dict(
-                    handler = self.handler,
-                    name    = name,
-                    args    = args,
-                    kwargs  = kwargs
+                    uuid   = self.uuid,
+                    name   = name,
+                    args   = args,
+                    kwargs = kwargs
                 )
             )
             
@@ -147,14 +145,13 @@ class LazyCaller(object):
         
 
 class ClientCaller(object):
-    def __init__(self, socket, handler):
-        print "hier"
+    def __init__(self, socket, uuid):
         self.socket = socket
-        self.handler = handler
+        self.uuid = uuid
         
         # caller helpers
-        self.all = LazyCaller(self.socket.call_all, self.handler)
-        self.one = LazyCaller(self.socket.call_one, self.handler)
+        self.all = LazyCaller(self.socket.call_all, self.uuid)
+        self.one = LazyCaller(self.socket.call_one, self.uuid)
         
         
 class Client(tornado.websocket.WebSocketHandler):
@@ -177,44 +174,37 @@ class Client(tornado.websocket.WebSocketHandler):
     
     def on_message(self, message):
         """The dispatcher"""
-        try:
-            data = json.loads(message)
-            print "Got data:", data
+        data = json.loads(message)
+        print "-->:", [data]
+        type = data['type']
+        
+        if type == 'create':
             handler = data['handler']
-            type = data['type']
-
-            if type == 'create':
-                if handler in self.handlers:
-                    clientcaller = ClientCaller(self, handler)
-                    instance =self.handlers[handler](clientcaller)
-                    self.signals[handler] = instance
-                else:
-                    print "did not find identifier"
-            elif type == 'call':
-                name = data['name']
-                if handler in self.signals:
-                    f = getattr(self.signals[handler], name, None)
-                    if f:
-                        f(*data['args'], **data['kwargs'])
-                    else:
-                        print "did not find handler", handler, name
-                else:
-                    print "did not find handler", handler
-        except:
-            pass
+            uuid    = data['uuid']
+            if handler in self.handlers:
+                clientcaller = ClientCaller(self, uuid)
+                instance =self.handlers[handler](clientcaller)
+                self.signals[uuid] = instance
+            else:
+                print "did not find identifier"
                 
-        #else:
-            
-            #if identifier in self.handlers:
-                #self.signals[identifier](*data['args'], **data['kwargs'])
-            #else:
-                #print "did not find identifier"
-                #self.all(identifier, "no handler available")
-
+            print 
+        elif type == 'call':
+            name = data['name']
+            uuid = data['uuid']
+            if uuid in self.signals:
+                f = getattr(self.signals[uuid], name, None)
+                if f:
+                    f(*data['args'], **data['kwargs'])
+                else:
+                    print "did not find signal", uuid, name
+            else:
+                print "did not find uuid", uuid
+                
     def on_close(self):
         self.connections.remove(self)
-        for handler in self.handlers:
-            self.handlers[handler].detach()
+        for signal in self.signals:
+            self.signals[signal].detach()
         print 'connection closed'
     
         

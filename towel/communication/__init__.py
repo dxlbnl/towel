@@ -15,50 +15,7 @@ json = object()
 json.dumps = json_dumps
 json.loads = json_loads
 
-
-#class JsonSignal(Signal):
-    #@JSVar('xhr', 'JSON')
-    #def __init__(self, identifier):
-        #super(JsonSignal, self).__init__()
-        
-        #def change():
-            #if py(xhr.readyState) == 4:
-                #print "done:", py(xhr.response)
-                
-                #super(JsonSignal, self).__call__(xhr.response)
-                
-        
-        #xhr = create_xml_httprequest()
-        #xhr.onreadystatechange = change
-        
-        #self.xhr = xhr
-        #self.identifier = identifier
-        
-    #@JSVar('xhr')
-    #def __call__(self, *args, **kwargs):
-        #super(JsonSignal, self).__call__(*args, **kwargs)
-        #data = {
-            #'args'       : args,
-            #'kwargs'     : kwargs
-        #}
-        #jsondata = json.dumps(data)
-        #url = "/ajax/" + self.identifier
-        
-        #print jsondata
-        
-        #xhr = js(self.xhr)
-        #xhr.open("POST", url, True)
-        #xhr.send(jsondata)
-        
-
-    #ws.onmessage = function(evt) {{alert("message received: " + evt.data)}};
- 
-    #ws.onclose = function(evt) {{ alert("Connection close"); }};
- 
-    #ws.onopen = function(evt) {{ 
-        #console.log("websocked: " + url + " opened");
-    #}};
-JsonSignal = ''    
+Connection = ''    
         
 class WebSocket(object):
     def __init__(self, url):
@@ -75,13 +32,12 @@ class WebSocket(object):
         ws.onclose   = js(self.on_close)
         self.state = 'close'
         self.ws = ws
-        
 
     @JSVar("res")
     def on_message(self, res):
         data = py(json.loads(res.data))
-        print "data", data
-        instance = JsonSignal.websignals[data['handler']]
+        print "<--", data
+        instance = Connection.websignals[data['uuid']]
         instance.call(data['name'], *data['args'], **data['kwargs'])
 
     def on_open(self, func):
@@ -99,47 +55,55 @@ class WebSocket(object):
     @JSVar("ws")
     def send(self, data):
         if self.state == 'open':
+            print "-->", data
+            data = json.dumps(data)
             ws = js(self.ws)
             ws.send(data)
         else:
             self.cache.append(data)
-        
 
-def create_dummy_callable(send, handler, name):
+def create_dummy_callable(send, uuid, name):
     def dummy_callable(*args, **kwargs):
-        send(json.dumps(dict(
+        send(dict(
             type='call',
-            handler = handler,
+            uuid = uuid,
             name = name,
             args = args, 
             kwargs = kwargs
-        )))
+        ))
     return dummy_callable
         
-class JsonSignal(Signal):
+class Connection(Signal):
     websignals = {}
     
-    def __init__(self, handler):
-        super(JsonSignal, self).__init__()
-        
-        self.handler = handler
-        self.websignals[handler] = self
-        self.send(json.dumps(dict(
-            type = 'create',
-            handler = handler
-        )))
+    knownUuids = []
     
-    def connect(self, obj):
-        """Connects the singal to an object"""
+    def __init__(self, handler, obj):
+        super(Connection, self).__init__()
         self.obj = obj
-        return obj
+        self.uuid = self.create_uuid(handler)
+        self.websignals[self.uuid] = self
+        self.send(dict(
+            type = 'create',
+            handler = handler,
+            uuid = self.uuid
+        ))
         
+    def create_uuid(self, handler):
+        i = 0
+        while True:
+            h = "%s-%d" %(handler, i)
+            if h not in self.knownUuids:
+                self.knownUuids.append(h)
+                return h
+            i += 1
+    
     def __getattr__(self, name):
-        return create_dummy_callable(self.send, self.handler, name)
+        return create_dummy_callable(self.send, self.uuid, name)
         
     def call(self, name, *args, **kwargs):
         self.obj.__getattribute__(name)(*args, **kwargs)
 
 
 ws = WebSocket(configuration.host + "/ws")
-JsonSignal.send = ws.send
+Connection.send = ws.send
