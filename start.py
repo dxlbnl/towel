@@ -1,6 +1,5 @@
 from towel import server
 
-        
 
 class Chat(object):
     users = []

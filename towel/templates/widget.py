@@ -1,8 +1,8 @@
 print "loading Templates.widget"
 
 from towel.templates.compiler import compileDirective
-    
- 
+from towel.style import Sheet, SizePolicy
+
 class Widget(object):
     """A Widget is a visible ui component, it can contain other widgets"""
     
@@ -11,6 +11,10 @@ class Widget(object):
     directive = None
     template  = None
     __setters__ = {}
+    
+    # layout
+    sheet = Sheet("layout")
+    sizePolicy = SizePolicy(x=SizePolicy.expanding, y=SizePolicy.expanding)
     
     def __init__(self):
         self.node = self.template.clone()
@@ -43,9 +47,24 @@ class Widget(object):
         else:
             object.__setattr__(self, name, value)
 
+    @JSVar("window")
     def setRoot(self):
         self.node.setRoot()
+        
+        def resize(e):
+            self.__on_resize(e)
+        
+        window.addEventListener('resize', resize, false)
+        
+    @JSVar('document')
+    def __on_resize(self, e):
+        x = py(document.body.offsetWidth)
+        y = py(document.body.offsetHeight)
+        
+        self.setSize(x, y)
+        pass
 
     def setSize(self, x, y):
+        print "Setting size:", x, y
         # x, y in percentages
-        self.node.setSize(x, y)
+        #self.node.setSize(x, y)
