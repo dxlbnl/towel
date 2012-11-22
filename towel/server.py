@@ -2,6 +2,7 @@ import json
 import os.path
 
 from towel import configuration
+from datetime import datetime
 
 import tornado.ioloop
 import tornado.web
@@ -97,7 +98,7 @@ class ScriptServer(tornado.web.RequestHandler):
     
     @classmethod
     def addApplication(cls, app):
-        print "Added application", app
+        print "++++++++++++++++   Adding application", app
         
         dependencies = makeDependencyTree(app, watch=watch)
         
@@ -164,13 +165,17 @@ class Client(tornado.websocket.WebSocketHandler):
         self.signals = {}
         
         print 'new connection'
+
+    def serialize(self, data):
+        dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
+        return json.dumps(data, default=dthandler)
         
     def call_all(self, data):
         for conn in self.connections:
-            conn.write_message(json.dumps(data))
+            conn.write_message(self.serialize(data))
             
     def call_one(self, data):
-        self.write_message(json.dumps(data))
+        self.write_message(self.serialize(data))
     
     def on_message(self, message):
         """The dispatcher"""
@@ -221,7 +226,7 @@ application = tornado.web.Application([
     (r"/import/([\w.]+)", ScriptServer),
     (r"/ajax/([\w]+)", JSONHandler),
     (r"/ws", Client),
-    (r"/(\w*)", MainHandler),
+    (r"/([\w.]*)", MainHandler),
 ], **settings)
 
 

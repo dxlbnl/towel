@@ -1,7 +1,7 @@
 print 'opening test'
 
 from towel.components import App, Menu, LineEdit, VLayout, HLayout, ListView
-from towel.communication import JsonSignal
+from towel.communication import Connection
 
 class Chat(App):
     def __init__(self):
@@ -54,5 +54,8 @@ class Chat(App):
             self.chatServer.on_message(self.username + ": " + line)
             
 
-t = Chat()
-t.setRoot()
+t1 = Chat()
+t2 = Chat()
+
+l = HLayout(t1, t2)
+l.setRoot()

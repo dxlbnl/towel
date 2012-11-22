@@ -38,8 +38,8 @@ class DependencyFinder(ast.NodeVisitor):
         for alias in node.names:
             self.imports.add(alias.name)
 
+
 def load_module(name, origin='', asname=None, watch=None):
-    
     if origin:
         location = origin + '.' + name
     else:
@@ -55,7 +55,7 @@ def load_module(name, origin='', asname=None, watch=None):
         # add watch when supplied
         if watch:
             watch(file.name)
-        
+
         if asname:
             location = asname
         
@@ -68,7 +68,6 @@ def load_module(name, origin='', asname=None, watch=None):
 
 class Module:
     def __init__(self, fullname, name, code):
-        
         self.fullname = fullname
         self.name = name
         self.code = code
@@ -78,8 +77,6 @@ class Module:
         f = DependencyFinder()
         f.visit(self.ast)    
         
-        #print "Loading module:", name
-        #print "\t > dependencies", f.imports
         self.requires = f.imports
         
     def __repr__(self):
@@ -102,6 +99,9 @@ class Module:
     def getModules(self):
         return [self]
 
+    def set_name(self, name):
+        self.fullname = name
+
 class Package:
     def __init__(self, fullname, name, init):
         self.fullname = fullname
@@ -119,6 +119,9 @@ class Package:
         contents = ['    '+c for c in contents]
         
         return "Package '{name}':\n{contents}".format(name=self.name, contents='\n'.join(contents))
+
+    def set_name(self, name):
+        self.init.set_name(name)
         
     @property
     def requires(self):
@@ -170,6 +173,8 @@ def makeDependencyTree(module, asname="__main__", watch=None):
     todo = known
     
     modules = {}
+
+    main_done = False
     
     while todo:
         current = todo.pop()
@@ -200,7 +205,10 @@ def makeDependencyTree(module, asname="__main__", watch=None):
             elif m == None:
                 # add the module
                 try:
-                    mod.add(n, load_module(root_module + '.' + n, watch=watch))
+                    mo = load_module(root_module + '.' + n, watch=watch)
+                    if not main_done:
+                        mo.set_name(asname)
+                    mod.add(n, mo)
                     done.add(root_module + '.' + n)
                 except ImportError:
                     # it's probably no module
@@ -216,6 +224,7 @@ def makeDependencyTree(module, asname="__main__", watch=None):
         
         #update todo
         todo = known.difference(done)
+        main_done = True
         
         
     return modules

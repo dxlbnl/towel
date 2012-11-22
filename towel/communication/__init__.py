@@ -36,7 +36,7 @@ class WebSocket(object):
     @JSVar("res")
     def on_message(self, res):
         data = py(json.loads(res.data))
-        print "<--", data
+        #print "<--", data
         instance = Connection.websignals[data['uuid']]
         instance.call(data['name'], *data['args'], **data['kwargs'])
 
@@ -48,14 +48,14 @@ class WebSocket(object):
                 self.send(data)
 
     def on_close(self, func):
-        print 'closed ws'
+        print 'closed ws', func
         self.state = 'close'
         #self.connect()
 
     @JSVar("ws")
     def send(self, data):
         if self.state == 'open':
-            print "-->", data
+            #print "-->", data
             data = json.dumps(data)
             ws = js(self.ws)
             ws.send(data)
