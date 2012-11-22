@@ -4,7 +4,7 @@ from towel.templates import DOMNode
 class Sheet(DOMNode):
     
     @JSVar('document', 'el', 'Array', 'rule')
-    def __init__(self, name, disabled=False):
+    def __init__(self, name):
         super(Sheet, self).__init__("style", {"type":"text/css"})
         
         self.rules = {}
@@ -15,7 +15,9 @@ class Sheet(DOMNode):
         self.sheet = el.sheet
         print "found sheet", self.sheet
         
-        for rule in list(Array.prototype.slice.call(el.sheet.rules)):
+        rules = el.sheet.rules or el.sheet.cssRules
+        
+        for rule in list(Array.prototype.slice.call(rules)):
             self.rules[py(rule.selectorText)] = rule.style
             
         
