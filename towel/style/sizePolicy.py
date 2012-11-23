@@ -4,7 +4,10 @@ class SizePolicy(object):
     
     expanding = ''
     fixed = ''
-    
+
+    x = 'x'
+    y = 'y'
+
     def __init__(self, widget, x, y):
         self.x = x
         self.y = y
@@ -12,25 +15,14 @@ class SizePolicy(object):
         self.widget = widget
     
     def set_size(self, x, y):
-        self.widget.sheet.set_rule("#" + self.widget.id, {
-            'width'  : str(x) + 'px',
-            'height' : str(y) + 'px',
-            'float'  : 'left',
-        })
-        if hasattr(self, 'divide_size'):
-            self.divide_size(x, y)
-        
-        
-        #if isinstance(x, int):
-            #print self.obj
-            #self.sheet.setRule("#" + str(self.obj.id), {
-                #'width' : str(x) + 'px', 
-                #'position' : 'absolute', 
-                #'left' : '50%', 
-                #'margin-left' : str(-(x/2)) + 'px'
-            #})
-            #self.xPolicy = x 
-        
-        #if y:
-            #self.yPolicy = y    
-    
+        self.x = x
+        self.y = y
+
+        # self.widget.sheet.set_rule("#" + self.widget.id, {})
+        if hasattr(self, 'divide_space'):
+            self.divide_space()
+
+    def divide(self, policies, direction):
+        print "Dividing over", policies, direction
+        divided = getattr(self, direction) / len(policies)
+        return [divided] * len(policies)

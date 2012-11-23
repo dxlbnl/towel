@@ -1,6 +1,6 @@
 from towel.templates import Widget, DOMNode 
 from towel.communication import Signal
-
+from towel.style import SizePolicy
 
 class LineEdit(Widget):
     directive = {
@@ -21,6 +21,12 @@ class LineEdit(Widget):
         self.valueChanged = Signal()
         self.textEntered = Signal()
         self.sortNow = Signal()
+
+        self.size_policy = SizePolicy(self, 
+            x = SizePolicy.expanding, 
+            y = SizePolicy.expanding
+        )
+
         
         #self.track(":keyup", self.__keypressed)
         self.track(":keypress", self.__keypressed)

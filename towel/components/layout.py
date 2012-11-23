@@ -21,7 +21,7 @@ class Layout(Widget):
         
         self.children = list(args)
 
-        self.size_policy.divide_size = self.divide_size
+        self.size_policy.divide_space = self.divide_space
         
     def add(self, child):
         self.children.append(child)
@@ -29,19 +29,25 @@ class Layout(Widget):
     
 class HLayout(Layout):
 
-    def divide_size(self, x, y):
-        child_size = x / len(self.children)
+    def divide_space(self):
+        """Passes the sizepolicies to sizepolicy to share the size available."""
 
+        policies = []
         for child in self.children:
-            child.size_policy.set_size(child_size, y)
+            policies.append(child.size_policy)
+
+        self.size_policy.divide(policies, direction=SizePolicy.x)
             
 class VLayout(Layout):
 
-    def divide_size(self, x, y):
-        child_size = y / len(self.children)
+    def divide_space(self):
+        """Passes the sizepolicies to sizepolicy to share the size available."""
 
+        policies = []
         for child in self.children:
-            child.size_policy.set_size(x, child_size)
+            policies.append(child.size_policy)
+
+        print self.size_policy.divide(policies, direction=SizePolicy.x)
             
             
             

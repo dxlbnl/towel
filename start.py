@@ -1,3 +1,5 @@
+#!/home/dexter/.virtualenvs/bin/python
+
 from towel import server
 
 from chatServer import ChatServer
