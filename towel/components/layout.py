@@ -1,5 +1,5 @@
 from towel.templates import Widget, DOMNode
-
+from towel.style import SizePolicy
 
 class Layout(Widget):
     directive = {
@@ -20,37 +20,28 @@ class Layout(Widget):
         super(Layout, self).__init__()
         
         self.children = list(args)
-##        self.sizePolicy = SizePolicy(self, 
-##            x = SizePolicy.expanding, 
-##            y = SizePolicy.expanding
-##        )
+
+        self.size_policy.divide_size = self.divide_size
         
-    def setSize(self, x=None, y=None):
-        #self.sizePolicy.setSize(x, y)
-        print 'setting size of layout:', x, y
-        
-    def addChild(self, child):
+    def add(self, child):
         self.children.append(child)
         
-        
-    
     
 class HLayout(Layout):
-    style = {
-        'background' : 'red'
-    }
-    #def setSize(self, x, y):
-        #Widget.setSize(self, x, y)
-        #for child in self.node.children():
-            #child.setSize(x / len(self.children), y)
+
+    def divide_size(self, x, y):
+        child_size = x / len(self.children)
+
+        for child in self.children:
+            child.size_policy.set_size(child_size, y)
             
 class VLayout(Layout):
-    pass
-    #def setSize(self, x, y):
-        #Widget.setSize(self, x, y)
-        #for child in self.node.children():
-            #child.setSize(x, y/ len(self.children))
-            
+
+    def divide_size(self, x, y):
+        child_size = y / len(self.children)
+
+        for child in self.children:
+            child.size_policy.set_size(x, child_size)
             
             
             

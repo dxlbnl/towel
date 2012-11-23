@@ -22,19 +22,21 @@ class Sheet(DOMNode):
             
         
     @JSVar('sheet', 'r', 'Array')
-    def _makeRule(self, rule):
+    def _make_rule(self, rule):
         sheet = js(self.sheet)
         sheet.addRule(js(rule))
+
+        rules = sheet.rules or sheet.cssRules
         
         # added, now look it up
-        for r in list(Array.prototype.slice.call(sheet.rules)):
+        for r in list(Array.prototype.slice.call(rules)):
             if py(r.selectorText) == rule:
                 return r.style
         
     @JSVar('style')
-    def setRule(self, rule, properties={}):
+    def set_rule(self, rule, properties={}):
         if rule not in self.rules:
-            self.rules[rule] = self._makeRule(rule)
+            self.rules[rule] = self._make_rule(rule)
             
         style = js(self.rules[rule])
         

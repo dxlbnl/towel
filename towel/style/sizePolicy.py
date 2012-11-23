@@ -5,12 +5,21 @@ class SizePolicy(object):
     expanding = ''
     fixed = ''
     
-    def __init__(self, x, y):
+    def __init__(self, widget, x, y):
         self.x = x
         self.y = y
         
+        self.widget = widget
     
-    #def setSize(self, x, y):
+    def set_size(self, x, y):
+        self.widget.sheet.set_rule("#" + self.widget.id, {
+            'width'  : str(x) + 'px',
+            'height' : str(y) + 'px',
+            'float'  : 'left',
+        })
+        if hasattr(self, 'divide_size'):
+            self.divide_size(x, y)
+        
         
         #if isinstance(x, int):
             #print self.obj

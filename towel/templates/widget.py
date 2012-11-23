@@ -13,8 +13,7 @@ class Widget(object):
     __setters__ = {}
     
     # layout
-    sheet = Sheet("layout")
-    sizePolicy = SizePolicy(x=SizePolicy.expanding, y=SizePolicy.expanding)
+    sheet = Sheet("style")
     
     def __init__(self):
         self.node = self.template.clone()
@@ -23,6 +22,14 @@ class Widget(object):
         
         self.id = self.name + str(Widget.id)
         Widget.id += 1
+        
+        self.size_policy = SizePolicy(self, 
+            x = SizePolicy.expanding, 
+            y = SizePolicy.expanding
+        )
+
+        if hasattr(self, 'style'):
+            self.sheet.set_rule("#" + self.id, self.style)
         
 
     def track(self, event, callback):
@@ -55,16 +62,14 @@ class Widget(object):
             self.__on_resize(e)
         
         window.addEventListener('resize', resize, false)
+        self.__on_resize()
         
     @JSVar('document')
-    def __on_resize(self, e):
+    def __on_resize(self):
         x = py(document.body.offsetWidth)
         y = py(document.body.offsetHeight)
         
-        self.setSize(x, y)
-        pass
-
-    def setSize(self, x, y):
-        print "Setting size:", x, y
-        # x, y in percentages
-        #self.node.setSize(x, y)
+        if self.size_policy:
+            self.size_policy.set_size(x, y)
+        else:
+            print "No size policy available"

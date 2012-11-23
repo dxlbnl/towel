@@ -28,6 +28,7 @@ class ListView(View):
     
     directive = {
         '@class' : 'name',
+        '@id' : 'id',
         'li' : {
             'item<-items' : {
                 '.' : 'item'

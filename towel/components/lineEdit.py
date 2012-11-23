@@ -4,6 +4,7 @@ from towel.communication import Signal
 
 class LineEdit(Widget):
     directive = {
+        '@id' : 'id',
         '@class' : 'name',
         "@placeholder" : "default",
         "@disabled" : "disabled",
